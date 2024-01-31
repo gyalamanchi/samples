@@ -11,6 +11,7 @@ from langchain_openai import OpenAI
 
 llm = OpenAI()
 
+#HUGGINGFACEHUB_API_TOKEN=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
 
 # load the document and split it into chunks
 loader = TextLoader("./sotu.txt")
