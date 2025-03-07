@@ -1,20 +1,3 @@
-
-Conversation with Gemini
-Can you write me a small langgraph app that will take a question and convert to sql.
-
-Make sure it has a few steps including:
-
-1) accepting the user input
-2) a step to generate the SQL from the user input which involves passing in via similarity search a set of SQL's related to the question. Also the relevant schemas should be injected from a similarity search of the schemas.
-3) Once the SQL is generated, add a step to check the column names are accurate and in the DB and table.
-4) Present the results to the user.
-
-
-Make everything modularized. Make sure the DB details and such can be passed in via config
-
-
-Assume the db is PostGres and you need to use psycopg2.
-Python
 import langgraph.graph as lg
 from langgraph.prebuilt import similarity_search
 from typing import TypedDict, List, Dict, Any
