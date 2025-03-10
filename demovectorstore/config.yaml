@@ -1,0 +1,5 @@
+# config.yaml
+vector_store:
+  chroma_path: "./chroma_db"
+  api_collection: "rest_api_endpoints"
+  schema_collection: "api_schemas"
