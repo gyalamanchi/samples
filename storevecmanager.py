@@ -1,3 +1,6 @@
+#pip install psycopg2-binary langchain redis sentence-transformers
+#pip install langchain-community
+
 import psycopg2
 from langchain.vectorstores import Redis
 from langchain_community.embeddings import SentenceTransformerEmbeddings
