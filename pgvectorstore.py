@@ -1,9 +1,9 @@
-#pip install psycopg2-binary pgvector sentence-transformers
+#pip install psycopg2-binary pgvector langchain sentence-transformers
 
 from typing import List, Optional, Any
 import psycopg2
 from psycopg2.extras import execute_values
-from sentence_transformers import SentenceTransformer
+from langchain.embeddings import SentenceTransformerEmbeddings
 import logging
 
 class PGVectorStore:
@@ -15,7 +15,7 @@ class PGVectorStore:
         schema: str = "public"
     ):
         """
-        Initialize the PGVector store with SentenceTransformer.
+        Initialize the PGVector store with SentenceTransformerEmbeddings.
         
         Args:
             connection_string: PostgreSQL connection string
@@ -28,9 +28,12 @@ class PGVectorStore:
         self.schema = schema
         self.logger = logging.getLogger(__name__)
         
-        # Initialize SentenceTransformer
-        self.model = SentenceTransformer(model_name)
-        self.embedding_dim = self.model.get_sentence_embedding_dimension()
+        # Initialize SentenceTransformerEmbeddings from LangChain
+        self.embeddings = SentenceTransformerEmbeddings(model_name)
+        
+        # Get embedding dimension (assuming first embedding gives us the dimension)
+        test_embedding = self.embeddings.embed_query("test")
+        self.embedding_dim = len(test_embedding)
         
         # Initialize the database table
         self._create_table()
@@ -84,8 +87,8 @@ class PGVectorStore:
         Returns:
             List of inserted IDs
         """
-        # Generate embeddings using SentenceTransformer
-        embeddings = self.model.encode(contents, convert_to_tensor=False).tolist()
+        # Generate embeddings using SentenceTransformerEmbeddings
+        embeddings = self.embeddings.embed_documents(contents)
         
         if metadata and len(metadata) != len(contents):
             raise ValueError("Number of metadata entries must match number of contents")
@@ -136,7 +139,7 @@ class PGVectorStore:
             List of dictionaries containing id, content, metadata, and similarity
         """
         # Generate query embedding
-        query_embedding = self.model.encode([query], convert_to_tensor=False)[0].tolist()
+        query_embedding = self.embeddings.embed_query(query)
         query_vector = str(query_embedding)
         
         search_sql = f"""
@@ -195,7 +198,7 @@ if __name__ == "__main__":
     # Initialize the vector store
     vector_store = PGVectorStore(
         connection_string=conn_string,
-        model_name="all-MiniLM-L6-v2",  # You can change this to any SentenceTransformer model
+        model_name="all-MiniLM-L6-v2",
         table_name="my_vectors"
     )
     
@@ -206,11 +209,11 @@ if __name__ == "__main__":
         {"source": "doc2"}
     ]
     
-    # Add vectors (automatically generates embeddings)
+    # Add vectors
     ids = vector_store.add_vectors(contents, metadata)
     print(f"Inserted IDs: {ids}")
     
-    # Perform similarity search with text query
+    # Perform similarity search
     results = vector_store.similarity_search(
         query="test document",
         k=2,
